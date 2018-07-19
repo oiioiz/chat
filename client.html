@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>chat</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+        var _roomNo;
+
+        function getRoomList(){
+            $.get('/roomList', function(data){
+                drawRoomList(data);
+            });
+        }
+
+        function drawRoomList(data){
+            var html = '';
+
+            $.each(data, function(i, v){
+                html += '<li><a href="#none">' + v.roomNo + '</a></li>';
+            });
+
+            $('#roomList').empty().append(html);
+        };
+
+        $(function(){
+            getRoomList();
+        });
+        
+    </script>
+</head>
+<body>
+    <div>
+        <ul id="roomList"></ul>
+    </div>
+
+    <div>
+        <p>room no : <span id="roomNo"></span> <a href="#none" id="leaveRoom">leave</a></p>
+        
+        <textarea id="chatLog" cols="30" rows="10" readonly></textarea>
+    </div>
+    <form id="chat">
+        <input type="text" id="name" readonly>
+        <input type="text" id="message">
+        <input type="submit" value="chat">
+        <button id="makeRoom" type="button">make room</button>
+    </form>
+    <div>
+        <textarea id="sysMsgLog" cols="50" rows="10" readonly></textarea>
+    </div>
+    <div id="box">
+        
+        <script>
+            var socket = io();
+
+            $('#chat').on('submit', function(e){
+                e.preventDefault();
+                
+                if(!_roomNo){
+                    sysMsg('make or join room before send message');
+                    return;
+                };
+                console.log(11);
+                socket.emit('send message', _roomNo, $('#name').val(), $('#message').val());
+                $('#message').val('');
+                
+            });
+
+            $('#makeRoom').on('click', function(e){
+                if(_roomNo){
+                    sysMsg('please leave of the room before make room');
+                    return;
+                }
+                
+                socket.emit('makeRoom', $('#name').val());
+                e.preventDefault();
+            });
+
+            $('#roomList').on('click', 'a', function(e){
+                if(_roomNo){
+                    sysMsg('already in the room');
+                    return;
+                }
+
+                socket.emit('joinRoom', $(this).text());
+                e.preventDefault();
+            });
+
+            $('#leaveRoom').on('click', function(e){
+                if(!_roomNo){
+                    sysMsg('not in the room');
+                    return;
+                }
+                socket.emit('leaveRoom', _roomNo);
+                e.preventDefault();
+            });
+
+            socket.on('joinRoom', function(res){
+                sysMsg(res.message);
+
+                if(res.success){
+                    _roomNo = res.roomNo;
+                    $('#roomNo').text(res.roomNo);
+                }
+            });
+
+            socket.on('receive message', function(msg){
+                $('#chatLog').append(msg + "\n");
+                $('#chatLog').scrollTop($('#chatLog')[0].scrollHeight);
+            });
+
+            socket.on('change name', function(name){
+                $('#name').val(name);
+            });
+
+            socket.on('makeRoom', function(roomNo){
+                _roomNo = roomNo;
+                $('#roomNo').text(roomNo);
+                sysMsg('make room complete!');
+            });
+
+            socket.on('leaveRoom', function(res){
+                _roomNo = '';
+                $('#roomNo').text('');
+            });
+
+            socket.on('sysMsg', function(msg){
+                sysMsg(msg);
+            });
+
+            socket.on('roomList', function(data){
+                drawRoomList(data);
+            });
+
+            function sysMsg(msg){
+                var time = '[' + new Date().toLocaleTimeString() + '] ';
+                $('#sysMsgLog').append(time + msg + "\n");
+                $('#sysMsgLog').scrollTop($('#sysMsgLog')[0].scrollHeight);
+            };
+
+            
+        </script>
+    </div>
+    
+</body>
+</html>
