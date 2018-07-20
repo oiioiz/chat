@@ -53,7 +53,7 @@ io.on('connection', function(socket){
         var totalRoomCnt = 1000;
 
         if(rooms.length >= totalRoomCnt){
-            io.to(socket.id).emit('sysMsg', "You have exceeded the maximum number of rooms opened");
+            io.to(socket.id).emit('sysMsg', "개설 가능한 방 갯수를 초과하였습니다.");
         }else{
             while(conflictRoomNo){
                 roomNo = Math.floor((Math.random() * totalRoomCnt));
@@ -111,18 +111,18 @@ io.on('connection', function(socket){
                     
                     console.log(rooms);
 
-                    io.to(socket.id).emit('joinRoom', {success:true, message:"join roomNo " + roomNo, roomNo:roomNo});
-
+                    io.to(socket.id).emit('joinRoom', {success:true, message:roomNo + " 번 방에 입장하셨습니다.", roomNo:roomNo});
+                    socket.broadcast.to(roomNo).emit('sysMsg', socket.id + '님이 입장 하셨습니다.');
                     break;
                 }else{
-                    io.to(socket.id).emit('joinRoom', {success:false, message:"roomNo " + roomNo + " is full", roomNo:roomNo});
+                    io.to(socket.id).emit('joinRoom', {success:false, message:roomNo + " 번 방이 가득 찼습니다.", roomNo:roomNo});
 
                     break;
                 }
             }
         }
 
-        if(cnt === 0) io.to(socket.id).emit('joinRoom', {"success":false, "message":"roomNo " + roomNo + " is not found", "roomNo":roomNo});
+        if(cnt === 0) io.to(socket.id).emit('joinRoom', {"success":false, "message":roomNo + " 번 방을 찾을 수 없습니다.", "roomNo":roomNo});
     });
 });
 

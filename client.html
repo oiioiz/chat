@@ -31,24 +31,30 @@
         });
         
     </script>
+    <style>
+        textarea {width:100%;}
+    </style>
 </head>
 <body>
     <div>
+        <p>방 목록</p>
         <ul id="roomList"></ul>
     </div>
-
+    <hr>
     <div>
-        <p>room no : <span id="roomNo"></span> <a href="#none" id="leaveRoom">leave</a></p>
+        <p>방 번호 : <span id="roomNo"></span> <a href="#none" id="leaveRoom">나가기</a></p>
         
         <textarea id="chatLog" cols="30" rows="10" readonly></textarea>
     </div>
     <form id="chat">
         <input type="text" id="name" readonly>
         <input type="text" id="message">
-        <input type="submit" value="chat">
-        <button id="makeRoom" type="button">make room</button>
+        <input type="submit" value="전송">
+        <button id="makeRoom" type="button">개설</button>
     </form>
+    <hr>
     <div>
+        <p>시스템 메세지</p>
         <textarea id="sysMsgLog" cols="50" rows="10" readonly></textarea>
     </div>
     <div id="box">
@@ -58,11 +64,18 @@
 
             $('#chat').on('submit', function(e){
                 e.preventDefault();
-                
+
                 if(!_roomNo){
-                    sysMsg('make or join room before send message');
+                    sysMsg('메세지를 보내기 위해서는 방을 개설하거나 입장하셔야 합니다.');
                     return;
                 };
+
+                if(!$('#message').val()){
+                    sysMsg('메세지를 입력해주세요.');
+                    $('#message').focus();
+                    return;
+                }
+
                 console.log(11);
                 socket.emit('send message', _roomNo, $('#name').val(), $('#message').val());
                 $('#message').val('');
@@ -71,7 +84,7 @@
 
             $('#makeRoom').on('click', function(e){
                 if(_roomNo){
-                    sysMsg('please leave of the room before make room');
+                    sysMsg('방에서 나간 뒤 방을 개설해주세요.');
                     return;
                 }
                 
@@ -81,7 +94,7 @@
 
             $('#roomList').on('click', 'a', function(e){
                 if(_roomNo){
-                    sysMsg('already in the room');
+                    sysMsg('이미 방에 있습니다. 방에서 나간 뒤 입장해주세요.');
                     return;
                 }
 
@@ -91,7 +104,7 @@
 
             $('#leaveRoom').on('click', function(e){
                 if(!_roomNo){
-                    sysMsg('not in the room');
+                    sysMsg('방에 입장하고 있지 않습니다.');
                     return;
                 }
                 socket.emit('leaveRoom', _roomNo);
@@ -119,7 +132,7 @@
             socket.on('makeRoom', function(roomNo){
                 _roomNo = roomNo;
                 $('#roomNo').text(roomNo);
-                sysMsg('make room complete!');
+                sysMsg('방 개설 완료.');
             });
 
             socket.on('leaveRoom', function(res){
