@@ -3,6 +3,8 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
+app.use('/js', express.static(__dirname + '/node_modules/jquery/dist'));
+
 app.get("/", function(req, res){
     res.sendfile('client.html');
 });
