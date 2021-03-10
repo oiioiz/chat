@@ -136,6 +136,8 @@ function getRoomList(){
     return roomList;
 };
 
-http.listen('3000', function(){
+var port = process.env.PORT || 3000; // 1
+
+http.listen(port, function(){
     console.log("Sever on!");
 });
